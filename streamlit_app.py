@@ -68,7 +68,7 @@ with tab2:
             harga_jual = st.number_input("Harga Jual per Unit", min_value=0)
             diskon = st.number_input("Diskon (Rp)", min_value=0)
             pajak = st.number_input("Pajak (%)", min_value=0.0)
-
+        
         submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
         if submitted2:
             jual_df = load_data("data/penjualan.csv", 
