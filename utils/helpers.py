@@ -1,6 +1,12 @@
 import pandas as pd
 import os
 
+def format_rupiah(x):
+    try:
+        return f"Rp {int(x):,}".replace(",", ".")
+    except:
+        return "Rp 0"
+
 def load_data(filepath, columns):
     if os.path.exists(filepath):
         return pd.read_csv(filepath)
@@ -18,19 +24,30 @@ def calculate_summary(stok_path, jual_path):
     jual = pd.read_csv(jual_path)
 
     stok_summary = stok.groupby("Kode").agg({'Qty': 'sum', 'Harga Modal': 'mean'}).reset_index()
-    jual_summary = jual.groupby("Kode").agg({'Qty': 'sum', 'Harga Jual': 'mean'}).reset_index()
+    jual_summary = jual.groupby("Kode").agg({
+        'Qty': 'sum',
+        'Harga Jual': 'mean',
+        'Diskon': 'sum',
+        'Pajak (%)': 'mean'
+    }).reset_index()
 
     merged = pd.merge(jual_summary, stok_summary, on="Kode", how="left", suffixes=("_jual", "_modal"))
-    merged["Pendapatan"] = merged["Qty_jual"] * merged["Harga Jual"]
-    merged["Modal"] = merged["Qty_jual"] * merged["Harga Modal"]
-    merged["Laba"] = merged["Pendapatan"] - merged["Modal"]
+    merged["Pendapatan Kotor"] = merged["Qty"] * merged["Harga Jual"]
+    merged["Potongan Pajak"] = (merged["Pendapatan Kotor"] * merged["Pajak (%)"]) / 100
+    merged["Pendapatan Bersih"] = merged["Pendapatan Kotor"] - merged["Diskon"] - merged["Potongan Pajak"]
+    merged["Modal"] = merged["Qty"] * merged["Harga Modal"]
+    merged["Laba"] = merged["Pendapatan Bersih"] - merged["Modal"]
     merged["Status"] = merged["Laba"].apply(lambda x: "Untung" if x > 0 else ("Rugi" if x < 0 else "Stagnan"))
 
-    return merged[["Kode", "Qty_jual", "Harga Jual", "Harga Modal", "Pendapatan", "Modal", "Laba", "Status"]]
+    # Format uang
+    for col in ["Harga Jual", "Harga Modal", "Pendapatan Kotor", "Diskon", "Potongan Pajak", "Pendapatan Bersih", "Modal", "Laba"]:
+        merged[col] = merged[col].apply(format_rupiah)
+
+    return merged[["Kode", "Qty", "Harga Jual", "Harga Modal", "Pendapatan Kotor", "Diskon", "Potongan Pajak", "Pendapatan Bersih", "Modal", "Laba", "Status"]]
 
 def analyze_product_sales(stok_path, jual_path):
     stok = load_data(stok_path, ["Tanggal", "Kode", "Nama", "Jenis Kendaraan", "Merek", "Qty", "Harga Modal"])
-    jual = load_data(jual_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual"])
+    jual = load_data(jual_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon", "Pajak (%)"])
 
     jual_summary = jual.groupby("Kode")["Qty"].sum().reset_index(name="Total Terjual")
     stok_summary = stok.groupby(["Kode", "Nama", "Jenis Kendaraan", "Merek"]).agg({
