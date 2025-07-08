@@ -1,6 +1,6 @@
-Kode;Nama;Jenis Kendaraan
-TRK01;Accu 120Ah;Truck
-MBL01;Accu 32Ah;Mobil
-MTR01;Accu 28Ah;Motor
-ELF01;Accu 100Ah;Elf
-LNN;Accu 65Ah;Lainnya
+Kode,Nama,Jenis Kendaraan
+TRK01,Accu 120Ah,Truck
+MBL01,Accu 32Ah,Mobil
+MTR01,Accu 28Ah,Motor
+ELF01,Accu 100Ah,Elf
+LNN01,Accu 65Ah,Lainnya
