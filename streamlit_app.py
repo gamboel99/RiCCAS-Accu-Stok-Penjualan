@@ -12,65 +12,62 @@ stok_path = "data/stok.csv"
 penjualan_path = "data/penjualan.csv"
 kode_barang_path = "data/kode_barang.csv"
 
-# Kolom standar
-stok_columns = ["Tanggal", "Kode", "Nama", "Jenis Kendaraan", "Merek", "Qty", "Harga Modal"]
-jual_columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
+# Load kode barang data
+kode_barang_df = pd.read_csv(kode_barang_path)
+kode_list = kode_barang_df["Kode"].tolist()
 
 # Tabs
 tab1, tab2, tab3, tab4 = st.tabs(["📥 Input Stok", "🛒 Penjualan", "📊 Laporan", "📌 Analisa Produk"])
 
-# =================== TAB 1: STOK ===================
+# ================= TAB 1 - INPUT STOK =================
 with tab1:
     st.header("Form Input Stok Barang")
-    if os.path.exists(kode_barang_path):
-        kode_barang_df = pd.read_csv(kode_barang_path)
-        kode_list = kode_barang_df["Kode"].tolist()
-
-        with st.form("form_stok"):
-            col1, col2 = st.columns(2)
-            with col1:
-                tanggal = st.date_input("Tanggal", value=datetime.today())
-                kode = st.selectbox("Kode Barang", kode_list)
-                data_kode = kode_barang_df[kode_barang_df["Kode"] == kode].iloc[0]
-                nama = data_kode["Nama"]
-                jenis = data_kode["Jenis Kendaraan"]
-                st.text_input("Nama Barang", nama, disabled=True)
-                st.text_input("Jenis Kendaraan", jenis, disabled=True)
-            with col2:
-                merek = st.text_input("Merek")
-                qty = st.number_input("Jumlah Masuk", min_value=0)
-                harga_modal = st.number_input("Harga Modal per Unit", min_value=0)
-            submitted = st.form_submit_button("💾 Tambah ke Stok")
-
-            if submitted:
-                df = load_data(stok_path, stok_columns)
-                new_row = pd.DataFrame([{
-                    "Tanggal": tanggal,
-                    "Kode": kode,
-                    "Nama": nama,
-                    "Jenis Kendaraan": jenis,
-                    "Merek": merek,
-                    "Qty": qty,
-                    "Harga Modal": harga_modal
-                }])
-                df = pd.concat([df, new_row], ignore_index=True)
-                save_data(df, stok_path)
-                st.success("✅ Data stok berhasil ditambahkan!")
-    else:
-        st.warning("❗ File kode_barang.csv tidak ditemukan!")
+    with st.form("form_stok"):
+        col1, col2 = st.columns(2)
+        with col1:
+            tanggal = st.date_input("Tanggal", value=datetime.today())
+            kode = st.selectbox("Kode Barang", kode_list)
+            selected = kode_barang_df[kode_barang_df["Kode"] == kode].iloc[0]
+            nama = selected["Nama"]
+            jenis = selected["Jenis Kendaraan"]
+            st.text_input("Nama Barang", nama, disabled=True)
+            st.text_input("Jenis Kendaraan", jenis, disabled=True)
+        with col2:
+            merek = st.text_input("Merek")
+            qty = st.number_input("Jumlah Masuk", min_value=0)
+            harga_modal = st.number_input("Harga Modal per Unit", min_value=0)
+        submitted = st.form_submit_button("💾 Tambah ke Stok")
+        if submitted:
+            df = load_data(stok_path, ["Tanggal", "Kode", "Nama", "Jenis Kendaraan", "Merek", "Qty", "Harga Modal"])
+            new_row = {
+                "Tanggal": tanggal,
+                "Kode": kode,
+                "Nama": nama,
+                "Jenis Kendaraan": jenis,
+                "Merek": merek,
+                "Qty": qty,
+                "Harga Modal": harga_modal
+            }
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+            save_data(df, stok_path)
+            st.success("✅ Data stok berhasil ditambahkan!")
 
     st.subheader("📋 Data Stok Saat Ini")
-    st.dataframe(load_data(stok_path, stok_columns), use_container_width=True)
+    st.dataframe(load_data(stok_path, ["Tanggal", "Kode", "Nama", "Jenis Kendaraan", "Merek", "Qty", "Harga Modal"]), use_container_width=True)
 
-# =================== TAB 2: PENJUALAN ===================
+# ================= TAB 2 - PENJUALAN =================
 with tab2:
     st.header("Form Input Penjualan")
     with st.form("form_penjualan"):
         col1, col2 = st.columns(2)
         with col1:
             tanggal = st.date_input("Tanggal Jual", value=datetime.today())
-            kode = st.text_input("Kode Barang Terjual")
-            nama = st.text_input("Nama Barang")
+            kode = st.selectbox("Kode Barang Terjual", kode_list)
+            selected = kode_barang_df[kode_barang_df["Kode"] == kode].iloc[0]
+            nama = selected["Nama"]
+            jenis = selected["Jenis Kendaraan"]
+            st.text_input("Nama Barang", nama, disabled=True)
+            st.text_input("Jenis Kendaraan", jenis, disabled=True)
         with col2:
             qty = st.number_input("Jumlah Terjual", min_value=0)
             harga_jual = st.number_input("Harga Jual per Unit", min_value=0)
@@ -78,10 +75,10 @@ with tab2:
 
         submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
         if submitted2:
-            df = load_data(penjualan_path, jual_columns)
+            columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
+            df = load_data(penjualan_path, columns)
 
-            # Pastikan struktur kolom konsisten
-            for col in jual_columns:
+            for col in columns:
                 if col not in df.columns:
                     df[col] = None
 
@@ -93,15 +90,14 @@ with tab2:
                 "Harga Jual": harga_jual,
                 "Diskon": diskon
             }])
-
-            df = pd.concat([df[jual_columns], new_row[jual_columns]], ignore_index=True)
+            df = pd.concat([df[columns], new_row[columns]], ignore_index=True)
             save_data(df, penjualan_path)
             st.success("✅ Data penjualan berhasil ditambahkan!")
 
     st.subheader("🧾 Data Penjualan")
-    st.dataframe(load_data(penjualan_path, jual_columns), use_container_width=True)
+    st.dataframe(load_data(penjualan_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]), use_container_width=True)
 
-# =================== TAB 3: LAPORAN ===================
+# ================= TAB 3 - LAPORAN =================
 with tab3:
     st.header("📊 Laporan Keuangan Sederhana")
     summary = calculate_summary(stok_path, penjualan_path)
@@ -109,7 +105,7 @@ with tab3:
     st.metric("Total Modal (Rp)", f"{summary['Total Modal']:,.0f}")
     st.metric("Laba Kotor (Rp)", f"{summary['Laba Kotor']:,.0f}")
 
-# =================== TAB 4: ANALISA ===================
+# ================= TAB 4 - ANALISA =================
 with tab4:
     st.header("📌 Analisa Performa Produk")
     analisa = analyze_product_sales(stok_path, penjualan_path)
