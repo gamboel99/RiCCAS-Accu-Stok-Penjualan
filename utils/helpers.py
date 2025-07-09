@@ -1,8 +1,16 @@
 import pandas as pd
 
 def load_data(path, columns):
-    ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
-    
+    try:
+        df = pd.read_csv(path)
+        # Jika file ada tapi kolom tidak cocok, buat ulang DataFrame kosong
+        if set(columns).issubset(df.columns):
+            return df
+        else:
+            return pd.DataFrame(columns=columns)
+    except:
+        return pd.DataFrame(columns=columns)
+
 def save_data(df, path):
     df.to_csv(path, index=False)
 
