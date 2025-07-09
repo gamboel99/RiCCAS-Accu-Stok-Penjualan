@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 import os
-from datetime import datetime
 import io
+from datetime import datetime
 from utils.helpers import (
     load_data, save_data, calculate_summary, analyze_product_sales
 )
@@ -10,12 +10,15 @@ from utils.helpers import (
 st.set_page_config(page_title="RiCCAS Accu - Sistem Stok & Penjualan", layout="wide")
 st.title("📦 RiCCAS Accu - Sistem Stok & Penjualan")
 
+# Tabs
 tab1, tab2, tab3, tab4 = st.tabs(["📥 Input Stok", "🛒 Penjualan", "📊 Laporan", "📌 Analisa Produk"])
+
+# Path file kode barang
+kode_barang_path = "data/kode_barang.csv"
 
 with tab1:
     st.header("Form Input Stok Barang")
 
-    kode_barang_path = "data/kode_barang.csv"
     if os.path.exists(kode_barang_path):
         kode_barang_df = pd.read_csv(kode_barang_path)
         kode_list = kode_barang_df["Kode"].tolist()
@@ -42,7 +45,16 @@ with tab1:
             if submitted:
                 stok_df = load_data("data/stok.csv", 
                     ["Tanggal", "Kode", "Nama", "Jenis Kendaraan", "Merek", "Qty", "Harga Modal"])
-                stok_df.loc[len(stok_df)] = [tanggal, selected_kode, nama, jenis, merek, qty, harga_modal]
+                new_row = {
+                    "Tanggal": tanggal,
+                    "Kode": selected_kode,
+                    "Nama": nama,
+                    "Jenis Kendaraan": jenis,
+                    "Merek": merek,
+                    "Qty": qty,
+                    "Harga Modal": harga_modal
+                }
+                stok_df = pd.concat([stok_df, pd.DataFrame([new_row])], ignore_index=True)
                 save_data(stok_df, "data/stok.csv")
                 st.success("✅ Data stok berhasil ditambahkan!")
 
@@ -73,7 +85,6 @@ with tab2:
         if submitted2:
             jual_df = load_data("data/penjualan.csv", 
                 ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon", "Pajak (%)"])
-            
             new_row = {
                 "Tanggal": tanggal,
                 "Kode": kode,
@@ -83,8 +94,6 @@ with tab2:
                 "Diskon": diskon,
                 "Pajak (%)": pajak
             }
-
-            # ✅ Tambahkan baris baru dengan cara AMAN
             jual_df = pd.concat([jual_df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(jual_df, "data/penjualan.csv")
             st.success("✅ Data penjualan berhasil ditambahkan!")
@@ -102,8 +111,7 @@ with tab3:
     # Export Excel
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df_export = calculate_summary("data/stok.csv", "data/penjualan.csv")
-        df_export.to_excel(writer, sheet_name="Laporan", index=False)
+        summary.to_excel(writer, sheet_name="Laporan", index=False)
     st.download_button(
         "⬇️ Download Excel", output.getvalue(), "laporan-laba-rugi.xlsx",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
