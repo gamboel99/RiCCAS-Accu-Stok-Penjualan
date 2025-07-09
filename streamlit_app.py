@@ -68,13 +68,14 @@ with tab2:
             diskon = st.number_input("Diskon (Rp)", min_value=0)
         submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
         if submitted2:
+
     submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
 if submitted2:
     columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
     
     df = load_data(penjualan_path, columns)
 
-    # pastikan kolom baru konsisten dengan kolom file
+    # Buat new_row sebagai DataFrame sesuai struktur
     new_row = pd.DataFrame([{
         "Tanggal": tanggal,
         "Kode": kode,
@@ -84,7 +85,14 @@ if submitted2:
         "Diskon": diskon
     }], columns=columns)
 
-    df = pd.concat([df, new_row], ignore_index=True)
+    # Pastikan df memiliki kolom yang sama
+    for col in columns:
+        if col not in df.columns:
+            df[col] = None
+
+    # Tambahkan baris baru
+    df = pd.concat([df[columns], new_row], ignore_index=True)
+
     save_data(df, penjualan_path)
     st.success("✅ Data penjualan berhasil ditambahkan!")
 
