@@ -74,7 +74,6 @@ with tab2:
             jual_df = load_data("data/penjualan.csv", 
                 ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon", "Pajak (%)"])
             
-            # ✅ Ini bagian penting: gunakan `new_row + concat`, BUKAN loc[]
             new_row = {
                 "Tanggal": tanggal,
                 "Kode": kode,
@@ -84,6 +83,8 @@ with tab2:
                 "Diskon": diskon,
                 "Pajak (%)": pajak
             }
+
+            # ✅ Tambahkan baris baru dengan cara AMAN
             jual_df = pd.concat([jual_df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(jual_df, "data/penjualan.csv")
             st.success("✅ Data penjualan berhasil ditambahkan!")
