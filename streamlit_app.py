@@ -54,8 +54,10 @@ with tab1:
     st.subheader("📋 Data Stok Saat Ini")
     st.dataframe(load_data(stok_path, ["Tanggal", "Kode", "Nama", "Jenis Kendaraan", "Merek", "Qty", "Harga Modal"]), use_container_width=True)
 
+# ================= TAB 2 - PENJUALAN =================
 with tab2:
     st.header("Form Input Penjualan")
+
     with st.form("form_penjualan"):
         col1, col2 = st.columns(2)
         with col1:
@@ -66,35 +68,40 @@ with tab2:
             qty = st.number_input("Jumlah Terjual", min_value=0)
             harga_jual = st.number_input("Harga Jual per Unit", min_value=0)
             diskon = st.number_input("Diskon (Rp)", min_value=0)
+
         submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
+
         if submitted2:
+            # Struktur kolom wajib
+            columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
 
-    submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
-if submitted2:
-    columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
-    
-    df = load_data(penjualan_path, columns)
+            # Pastikan file terbaca
+            df = load_data(penjualan_path, columns)
 
-    # Buat new_row sebagai DataFrame sesuai struktur
-    new_row = pd.DataFrame([{
-        "Tanggal": tanggal,
-        "Kode": kode,
-        "Nama": nama,
-        "Qty": qty,
-        "Harga Jual": harga_jual,
-        "Diskon": diskon
-    }], columns=columns)
+            # Buat baris baru dengan format yang sama
+            new_row = pd.DataFrame([{
+                "Tanggal": tanggal,
+                "Kode": kode,
+                "Nama": nama,
+                "Qty": qty,
+                "Harga Jual": harga_jual,
+                "Diskon": diskon
+            }])
 
-    # Pastikan df memiliki kolom yang sama
-    for col in columns:
-        if col not in df.columns:
-            df[col] = None
+            # Samakan struktur kolom jika masih kosong
+            for col in columns:
+                if col not in df.columns:
+                    df[col] = None
 
-    # Tambahkan baris baru
-    df = pd.concat([df[columns], new_row], ignore_index=True)
+            # Gabung baris baru dengan data lama
+            df = pd.concat([df[columns], new_row[columns]], ignore_index=True)
 
-    save_data(df, penjualan_path)
-    st.success("✅ Data penjualan berhasil ditambahkan!")
+            # Simpan
+            save_data(df, penjualan_path)
+            st.success("✅ Data penjualan berhasil ditambahkan!")
+
+    st.subheader("🧾 Data Penjualan")
+    st.dataframe(load_data(penjualan_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]), use_container_width=True)
 
 with tab3:
     st.header("📊 Laporan Keuangan Sederhana")
