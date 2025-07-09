@@ -81,7 +81,7 @@ with tab2:
                 "Kode": kode,
                 "Nama": nama,
                 "Qty": qty,
-                "Harga Jual": harga_jual,
+                "Harga Jual": harga jual,
                 "Diskon": diskon
             }
             df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
