@@ -1,4 +1,6 @@
 Kode,Nama,Jenis Kendaraan
-01,Accu Mobil,Mobil
-02,Accu Truk,Truk
-03,Accu Motor,Motor
+TRK01,Accu 120Ah,Truck
+MBL01,Accu 32Ah,Mobil
+MTR01,Accu 28Ah,Motor
+ELF01,Accu 100Ah,Elf
+LNN01,Accu 65Ah,Lainnya
