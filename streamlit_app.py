@@ -72,33 +72,18 @@ with tab2:
         submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
 
         if submitted2:
-            # Struktur kolom wajib
-            columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
+    columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
+    df = load_data(penjualan_path, columns)
 
-            # Pastikan file terbaca
-            df = load_data(penjualan_path, columns)
+    new_row = pd.DataFrame([[tanggal, kode, nama, qty, harga_jual, diskon]], columns=columns)
 
-            # Buat baris baru dengan format yang sama
-            new_row = pd.DataFrame([{
-                "Tanggal": tanggal,
-                "Kode": kode,
-                "Nama": nama,
-                "Qty": qty,
-                "Harga Jual": harga_jual,
-                "Diskon": diskon
-            }])
+    for col in columns:
+        if col not in df.columns:
+            df[col] = None
 
-            # Samakan struktur kolom jika masih kosong
-            for col in columns:
-                if col not in df.columns:
-                    df[col] = None
-
-            # Gabung baris baru dengan data lama
-            df = pd.concat([df[columns], new_row[columns]], ignore_index=True)
-
-            # Simpan
-            save_data(df, penjualan_path)
-            st.success("✅ Data penjualan berhasil ditambahkan!")
+    df = pd.concat([df[columns], new_row], ignore_index=True)
+    save_data(df, penjualan_path)
+    st.success("✅ Data penjualan berhasil ditambahkan!")
 
     st.subheader("🧾 Data Penjualan")
     st.dataframe(load_data(penjualan_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]), use_container_width=True)
