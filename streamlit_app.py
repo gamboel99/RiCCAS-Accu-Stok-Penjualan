@@ -78,7 +78,18 @@ with tab2:
         if submitted2:
             jual_df = load_data("data/penjualan.csv", 
                 ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon", "Pajak (%)"])
-            jual_df.loc[len(jual_df)] = [tanggal, kode, nama, qty, harga_jual, diskon, pajak]
+            new_row = {
+                "Tanggal": tanggal,
+                "Kode": kode,
+                "Nama": nama,
+                "Qty": qty,
+                "Harga Jual": harga_jual,
+                "Diskon": diskon,
+                "Pajak (%)": pajak
+            }
+jual_df = pd.concat([jual_df, pd.DataFrame([new_row])], ignore_index=True)
+save_data(jual_df, "data/penjualan.csv")
+
             save_data(jual_df, "data/penjualan.csv")
             st.success("✅ Data penjualan berhasil ditambahkan!")
 
