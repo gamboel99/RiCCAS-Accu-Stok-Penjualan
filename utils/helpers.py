@@ -3,10 +3,11 @@ import pandas as pd
 def load_data(path, columns):
     try:
         df = pd.read_csv(path)
-        if set(columns).issubset(df.columns):
-            return df
-        else:
-            return pd.DataFrame(columns=columns)
+        # Tambah kolom yang hilang agar tidak error saat diakses
+        for col in columns:
+            if col not in df.columns:
+                df[col] = 0 if 'Harga' in col or 'Diskon' in col or 'Qty' in col else ""
+        return df[columns]
     except:
         return pd.DataFrame(columns=columns)
 
