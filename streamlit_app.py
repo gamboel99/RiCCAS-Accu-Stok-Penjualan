@@ -69,19 +69,17 @@ with tab2:
             qty = st.number_input("Jumlah Terjual", min_value=0)
             harga_jual = st.number_input("Harga Jual per Unit", min_value=0)
             diskon = st.number_input("Diskon (Rp)", min_value=0)
-            pajak = st.number_input("Pajak (%)", min_value=0.0)
         submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
         if submitted2:
             jual_df = load_data("data/penjualan.csv", 
-                ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon", "Pajak (%)"])
+                ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"])
             new_row = {
                 "Tanggal": tanggal,
                 "Kode": kode,
                 "Nama": nama,
                 "Qty": qty,
                 "Harga Jual": harga_jual,
-                "Diskon": diskon,
-                "Pajak (%)": pajak
+                "Diskon": diskon
             }
             jual_df = pd.concat([jual_df, pd.DataFrame([new_row])], ignore_index=True)
             save_data(jual_df, "data/penjualan.csv")
@@ -89,20 +87,5 @@ with tab2:
 
     st.subheader("🧾 Data Penjualan")
     st.dataframe(load_data("data/penjualan.csv", 
-        ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon", "Pajak (%)"]),
+        ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]),
         use_container_width=True)
-
-with tab3:
-    st.header("📊 Laporan Laba Rugi")
-    summary = calculate_summary("data/stok.csv", "data/penjualan.csv")
-    st.dataframe(summary, use_container_width=True)
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        summary.to_excel(writer, sheet_name="Laporan", index=False)
-    st.download_button("⬇️ Download Excel", output.getvalue(), "laporan-laba-rugi.xlsx",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-with tab4:
-    st.header("📌 Analisa Produk")
-    analysis = analyze_product_sales("data/stok.csv", "data/penjualan.csv")
-    st.dataframe(analysis, use_container_width=True)
