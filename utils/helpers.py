@@ -3,11 +3,7 @@ import pandas as pd
 
 def load_data(path, columns):
     try:
-        df = pd.read_csv(path)
-        # Jika kolom tidak cocok, kembalikan dataframe kosong
-        if set(columns) != set(df.columns):
-            return pd.DataFrame(columns=columns)
-        return df
+        return pd.read_csv(path)
     except:
         return pd.DataFrame(columns=columns)
 
