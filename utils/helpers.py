@@ -17,11 +17,13 @@ def calculate_summary(stok_path, penjualan_path):
     stok = pd.read_csv(stok_path)
     jual = pd.read_csv(penjualan_path)
 
-    if jual.empty:
-        jual["Subtotal"] = 0
-    else:
-        # Hitung Subtotal: (Qty × Harga Jual) - Diskon
-        jual["Subtotal"] = (jual["Qty"] * jual["Harga Jual"]) - jual["Diskon"]
+    # Pastikan kolom-kolom penting selalu ada
+    for col in ["Qty", "Harga Jual", "Diskon"]:
+        if col not in jual.columns:
+            jual[col] = 0
+
+    # Hitung Subtotal: (Qty × Harga Jual) - Diskon
+    jual["Subtotal"] = (jual["Qty"] * jual["Harga Jual"]) - jual["Diskon"]
 
     # Total Penjualan
     total_penjualan = jual["Subtotal"].sum()
@@ -30,6 +32,7 @@ def calculate_summary(stok_path, penjualan_path):
     if not stok.empty:
         latest_stok = stok.sort_values("Tanggal").drop_duplicates(["Kode", "Nama"], keep="last")
         merged = pd.merge(jual, latest_stok, on=["Kode", "Nama"], how="left", suffixes=("", "_stok"))
+        merged["Harga Modal"] = merged["Harga Modal"].fillna(0)
         merged["Modal"] = merged["Qty"] * merged["Harga Modal"]
         total_modal = merged["Modal"].sum()
     else:
