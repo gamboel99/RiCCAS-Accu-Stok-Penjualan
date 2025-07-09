@@ -68,23 +68,25 @@ with tab2:
             diskon = st.number_input("Diskon (Rp)", min_value=0)
         submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
         if submitted2:
-            columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
-df = load_data(penjualan_path, columns)
+    submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
+if submitted2:
+    columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
+    
+    df = load_data(penjualan_path, columns)
 
-new_row = pd.DataFrame([{
-    "Tanggal": tanggal,
-    "Kode": kode,
-    "Nama": nama,
-    "Qty": qty,
-    "Harga Jual": harga_jual,
-    "Diskon": diskon
-}], columns=columns)
+    # pastikan kolom baru konsisten dengan kolom file
+    new_row = pd.DataFrame([{
+        "Tanggal": tanggal,
+        "Kode": kode,
+        "Nama": nama,
+        "Qty": qty,
+        "Harga Jual": harga_jual,
+        "Diskon": diskon
+    }], columns=columns)
 
-df = pd.concat([df, new_row], ignore_index=True)
-save_data(df, penjualan_path)
-
-    st.subheader("🧾 Data Penjualan")
-    st.dataframe(load_data(penjualan_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]), use_container_width=True)
+    df = pd.concat([df, new_row], ignore_index=True)
+    save_data(df, penjualan_path)
+    st.success("✅ Data penjualan berhasil ditambahkan!")
 
 with tab3:
     st.header("📊 Laporan Keuangan Sederhana")
