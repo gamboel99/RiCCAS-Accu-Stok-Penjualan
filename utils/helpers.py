@@ -3,11 +3,10 @@ import pandas as pd
 def load_data(path, columns):
     try:
         df = pd.read_csv(path)
-        # Jika file ada tapi kolom tidak cocok, buat ulang DataFrame kosong
-        if set(columns).issubset(df.columns):
-            return df
-        else:
-            return pd.DataFrame(columns=columns)
+        for col in columns:
+            if col not in df.columns:
+                df[col] = 0
+        return df[columns]
     except:
         return pd.DataFrame(columns=columns)
 
@@ -15,24 +14,15 @@ def save_data(df, path):
     df.to_csv(path, index=False)
 
 def calculate_summary(stok_path, penjualan_path):
-    stok = pd.read_csv(stok_path)
-    jual = pd.read_csv(penjualan_path)
+    stok = load_data(stok_path, ["Tanggal", "Kode", "Nama", "Jenis Kendaraan", "Merek", "Qty", "Harga Modal"])
+    jual = load_data(penjualan_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"])
 
-    # Pastikan kolom-kolom penting selalu ada
-    for col in ["Qty", "Harga Jual", "Diskon"]:
-        if col not in jual.columns:
-            jual[col] = 0
-
-    # Hitung Subtotal: (Qty × Harga Jual) - Diskon
     jual["Subtotal"] = (jual["Qty"] * jual["Harga Jual"]) - jual["Diskon"]
-
-    # Total Penjualan
     total_penjualan = jual["Subtotal"].sum()
 
-    # Total Modal dari stok terakhir (berdasarkan Kode dan Nama)
     if not stok.empty:
         latest_stok = stok.sort_values("Tanggal").drop_duplicates(["Kode", "Nama"], keep="last")
-        merged = pd.merge(jual, latest_stok, on=["Kode", "Nama"], how="left", suffixes=("", "_stok"))
+        merged = pd.merge(jual, latest_stok, on=["Kode", "Nama"], how="left")
         merged["Harga Modal"] = merged["Harga Modal"].fillna(0)
         merged["Modal"] = merged["Qty"] * merged["Harga Modal"]
         total_modal = merged["Modal"].sum()
@@ -48,28 +38,23 @@ def calculate_summary(stok_path, penjualan_path):
     }
 
 def analyze_product_sales(stok_path, jual_path):
-    stok = pd.read_csv(stok_path)
-    jual = pd.read_csv(jual_path)
+    stok = load_data(stok_path, ["Tanggal", "Kode", "Nama", "Jenis Kendaraan", "Merek", "Qty", "Harga Modal"])
+    jual = load_data(jual_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"])
 
     if stok.empty or jual.empty:
         return pd.DataFrame([{"Pesan": "Belum ada cukup data"}])
 
-    # Rekap total barang masuk
     stok_summary = stok.groupby(["Kode", "Nama", "Jenis Kendaraan", "Merek"]).agg({
         "Qty": "sum",
         "Harga Modal": "mean"
     }).rename(columns={"Qty": "Total Masuk"})
 
-    # Rekap total terjual
     jual_summary = jual.groupby(["Kode", "Nama"]).agg({
         "Qty": "sum"
     }).rename(columns={"Qty": "Total Terjual"})
 
-    # Gabungkan
     result = pd.merge(stok_summary, jual_summary, on=["Kode", "Nama"], how="left").fillna(0)
     result["Stok Akhir"] = result["Total Masuk"] - result["Total Terjual"]
-
-    # Analisa performa
     result["Status"] = result["Total Terjual"].apply(
         lambda x: "Cepat Habis" if x >= 10 else "Kurang Laku"
     )
