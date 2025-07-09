@@ -109,3 +109,36 @@ with tab4:
     st.header("📌 Analisa Performa Produk")
     analisa = analyze_product_sales(stok_path, penjualan_path)
     st.dataframe(analisa, use_container_width=True)
+import io
+from openpyxl import Workbook
+
+# Tombol Simpan Excel
+st.sidebar.header("📁 Export Data")
+if st.sidebar.button("📤 Download Excel (.xlsx)"):
+    output = io.BytesIO()
+    writer = pd.ExcelWriter(output, engine='openpyxl')
+
+    # Load semua data
+    df_stok = load_data(stok_path, ["Tanggal", "Kode", "Nama", "Jenis Kendaraan", "Merek", "Qty", "Harga Modal"])
+    df_penjualan = load_data(penjualan_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual"])
+    df_analisa = analyze_product_sales(stok_path, penjualan_path)
+
+    # Ringkasan keuangan
+    summary = calculate_summary(stok_path, penjualan_path)
+    df_summary = pd.DataFrame([summary])
+
+    # Tulis ke Excel
+    df_stok.to_excel(writer, sheet_name="Stok", index=False)
+    df_penjualan.to_excel(writer, sheet_name="Penjualan", index=False)
+    df_summary.to_excel(writer, sheet_name="Ringkasan", index=False)
+    df_analisa.to_excel(writer, sheet_name="Analisa", index=False)
+
+    writer.close()
+    output.seek(0)
+
+    st.sidebar.download_button(
+        label="⬇️ Simpan File Excel",
+        data=output,
+        file_name="RiCCAS_Accu_Data.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
