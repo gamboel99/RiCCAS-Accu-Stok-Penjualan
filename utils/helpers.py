@@ -10,30 +10,36 @@ def load_data(path, columns):
 def save_data(df, path):
     df.to_csv(path, index=False)
 
-def calculate_summary(stok_path, jual_path):
+def calculate_summary(stok_path, penjualan_path):
     stok = pd.read_csv(stok_path)
-    jual = pd.read_csv(jual_path)
-    if stok.empty or jual.empty:
-        return pd.DataFrame([{"Pesan": "Belum ada cukup data stok atau penjualan"}])
-    
-    jual["Subtotal"] = (jual["Qty"] * jual["Harga Jual"]) - jual["Diskon"]
-    jual["Pajak (Rp)"] = jual["Subtotal"] * (jual["Pajak (%)"] / 100)
-    jual["Total"] = jual["Subtotal"] + jual["Pajak (Rp)"]
-    total_penjualan = jual["Total"].sum()
+    jual = pd.read_csv(penjualan_path)
 
-    # Estimasi modal (ambil harga rata-rata dari stok)
-    avg_modal = stok.groupby("Kode")["Harga Modal"].mean().reset_index()
-    merged = pd.merge(jual, avg_modal, on="Kode", how="left")
-    merged["Total Modal"] = merged["Qty"] * merged["Harga Modal"]
-    total_modal = merged["Total Modal"].sum()
+    if jual.empty:
+        jual["Subtotal"] = 0
+    else:
+        # Hitung Subtotal: (Qty × Harga Jual) - Diskon
+        jual["Subtotal"] = (jual["Qty"] * jual["Harga Jual"]) - jual["Diskon"]
 
-    laba = total_penjualan - total_modal
+    # Total Laba Kotor
+    total_penjualan = jual["Subtotal"].sum()
 
-    return pd.DataFrame([{
+    # Total Modal (ambil modal dari stok terakhir berdasarkan Kode)
+    if not stok.empty:
+        latest_stok = stok.sort_values("Tanggal").drop_duplicates(["Kode", "Merek"], keep="last")
+        merged = pd.merge(jual, latest_stok, on=["Kode", "Nama"], how="left", suffixes=("", "_stok"))
+        merged["Modal"] = merged["Qty"] * merged["Harga Modal"]
+        total_modal = merged["Modal"].sum()
+    else:
+        total_modal = 0
+
+    # Laba/Rugi
+    laba_kotor = total_penjualan - total_modal
+
+    return {
         "Total Penjualan": total_penjualan,
         "Total Modal": total_modal,
-        "Laba Bersih": laba
-    }])
+        "Laba Kotor": laba_kotor
+    }
 
 def analyze_product_sales(stok_path, jual_path):
     stok = pd.read_csv(stok_path)
