@@ -19,12 +19,12 @@ def calculate_summary(stok_path, penjualan_path):
     jual = pd.read_csv(penjualan_path)
 
     # Pastikan kolom-kolom penting selalu ada
-    for col in ["Qty", "Harga Jual", "Diskon"]:
+    for col in ["Qty", "Harga_Jual", "Diskon"]:
         if col not in jual.columns:
             jual[col] = 0
 
     # Hitung Subtotal: (Qty × Harga Jual) - Diskon
-    jual["Subtotal"] = (jual["Qty"] * jual["Harga Jual"]) - jual["Diskon"]
+    jual["Subtotal"] = (jual["Qty"] * jual["Harga_Jual"]) - jual["Diskon"]
 
     # Total Penjualan
     total_penjualan = jual["Subtotal"].sum()
