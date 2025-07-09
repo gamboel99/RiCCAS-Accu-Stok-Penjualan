@@ -12,7 +12,7 @@ stok_path = "data/stok.csv"
 penjualan_path = "data/penjualan.csv"
 kode_barang_path = "data/kode_barang.csv"
 
-# Tabs utama
+# Tabs
 tab1, tab2, tab3, tab4 = st.tabs(["📥 Input Stok", "🛒 Penjualan", "📊 Laporan", "📌 Analisa Produk"])
 
 # ================= TAB 1 - INPUT STOK =================
@@ -27,9 +27,8 @@ with tab1:
             with col1:
                 tanggal = st.date_input("Tanggal", value=datetime.today())
                 kode = st.selectbox("Kode Barang", kode_list)
-                match = kode_barang_df[kode_barang_df["Kode"] == kode].iloc[0]
-                nama = match["Nama"]
-                jenis = match["Jenis Kendaraan"]
+                nama = kode_barang_df[kode_barang_df["Kode"] == kode]["Nama"].values[0]
+                jenis = kode_barang_df[kode_barang_df["Kode"] == kode]["Jenis Kendaraan"].values[0]
                 st.text_input("Nama Barang", nama, disabled=True)
                 st.text_input("Jenis Kendaraan", jenis, disabled=True)
             with col2:
@@ -40,7 +39,7 @@ with tab1:
             submitted = st.form_submit_button("💾 Tambah ke Stok")
             if submitted:
                 df = load_data(stok_path, ["Tanggal", "Kode", "Nama", "Jenis Kendaraan", "Merek", "Qty", "Harga Modal"])
-                new_row = {
+                new_row = pd.DataFrame([{
                     "Tanggal": tanggal,
                     "Kode": kode,
                     "Nama": nama,
@@ -48,8 +47,8 @@ with tab1:
                     "Merek": merek,
                     "Qty": qty,
                     "Harga Modal": harga_modal
-                }
-                df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+                }])
+                df = pd.concat([df, new_row], ignore_index=True)
                 save_data(df, stok_path)
                 st.success("✅ Data stok berhasil ditambahkan!")
     else:
@@ -61,7 +60,6 @@ with tab1:
 # ================= TAB 2 - PENJUALAN =================
 with tab2:
     st.header("Form Input Penjualan")
-
     if os.path.exists(kode_barang_path):
         kode_barang_df = pd.read_csv(kode_barang_path)
         kode_list = kode_barang_df["Kode"].tolist()
@@ -76,20 +74,17 @@ with tab2:
             with col2:
                 qty = st.number_input("Jumlah Terjual", min_value=0)
                 harga_jual = st.number_input("Harga Jual per Unit", min_value=0)
-                diskon = st.number_input("Diskon (Rp)", min_value=0)
 
             submitted2 = st.form_submit_button("💾 Tambah ke Penjualan")
-
             if submitted2:
-                columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]
+                columns = ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual"]
                 df = load_data(penjualan_path, columns)
                 new_row = pd.DataFrame([{
                     "Tanggal": tanggal,
                     "Kode": kode,
                     "Nama": nama,
                     "Qty": qty,
-                    "Harga Jual": harga_jual,
-                    "Diskon": diskon
+                    "Harga Jual": harga_jual
                 }])
                 df = pd.concat([df, new_row], ignore_index=True)
                 save_data(df, penjualan_path)
@@ -98,7 +93,7 @@ with tab2:
         st.warning("❗ File kode_barang.csv tidak ditemukan!")
 
     st.subheader("🧾 Data Penjualan")
-    st.dataframe(load_data(penjualan_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual", "Diskon"]), use_container_width=True)
+    st.dataframe(load_data(penjualan_path, ["Tanggal", "Kode", "Nama", "Qty", "Harga Jual"]), use_container_width=True)
 
 # ================= TAB 3 - LAPORAN =================
 with tab3:
